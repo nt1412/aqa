@@ -26,9 +26,7 @@ def _current_version(tc: TestCase) -> TestCaseVersion | None:
     return max(active, key=lambda v: v.version) if active else None
 
 
-async def create_test_case(
-    session: AsyncSession, suite_id: int, data: TestCaseCreate
-) -> TestCase:
+async def create_test_case(session: AsyncSession, suite_id: int, data: TestCaseCreate) -> TestCase:
     suite = await session.get(TestSuite, suite_id)
     if suite is None:
         raise NotFound(f"suite {suite_id} not found")
@@ -96,14 +94,16 @@ async def create_version(
 
     source_steps = (
         [
-            TestStep(action=s.action, expected_result=s.expected_result,
-                     execution_type=s.execution_type)
+            TestStep(
+                action=s.action, expected_result=s.expected_result, execution_type=s.execution_type
+            )
             for s in data.steps
         ]
         if data.steps is not None
         else [
-            TestStep(action=s.action, expected_result=s.expected_result,
-                     execution_type=s.execution_type)
+            TestStep(
+                action=s.action, expected_result=s.expected_result, execution_type=s.execution_type
+            )
             for s in latest.steps
         ]
     )
@@ -136,11 +136,13 @@ async def get_by_external_id(session: AsyncSession, project_id: int, external_id
     return await get_test_case(session, tc.id)
 
 
-async def search_test_cases(
-    session: AsyncSession, project_id: int, query: str
-) -> list[TestCase]:
-    stmt = select(TestCase).where(
-        TestCase.project_id == project_id,
-        TestCase.name.ilike(f"%{query}%"),
-    ).order_by(TestCase.id)
+async def search_test_cases(session: AsyncSession, project_id: int, query: str) -> list[TestCase]:
+    stmt = (
+        select(TestCase)
+        .where(
+            TestCase.project_id == project_id,
+            TestCase.name.ilike(f"%{query}%"),
+        )
+        .order_by(TestCase.id)
+    )
     return list((await session.execute(stmt)).scalars().all())

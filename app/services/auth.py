@@ -23,7 +23,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(user_id: int) -> str:
-    expire = dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=_settings.jwt_expire_minutes)
+    expire = dt.datetime.now(dt.UTC) + dt.timedelta(minutes=_settings.jwt_expire_minutes)
     payload = {"sub": str(user_id), "exp": expire}
     return jwt.encode(payload, _settings.jwt_secret, algorithm=_settings.jwt_algorithm)
 
@@ -58,9 +58,7 @@ async def user_from_token(session: AsyncSession, token: str) -> User:
 
 
 async def user_from_api_key(session: AsyncSession, api_key: str) -> User:
-    user = (
-        await session.execute(select(User).where(User.api_key == api_key))
-    ).scalar_one_or_none()
+    user = (await session.execute(select(User).where(User.api_key == api_key))).scalar_one_or_none()
     if user is None or not user.active:
         raise Unauthorized("invalid api key")
     return user

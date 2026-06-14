@@ -1,8 +1,8 @@
 import pytest
 
+from app.schemas.project import ProjectCreate
 from app.services import projects
 from app.services.errors import Conflict, NotFound
-from app.schemas.project import ProjectCreate
 
 
 @pytest.mark.asyncio

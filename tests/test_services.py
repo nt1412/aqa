@@ -13,13 +13,24 @@ def test_all_tables_registered():
 
     names = set(Base.metadata.tables.keys())
     expected = {
-        "projects", "test_suites", "keywords", "platforms",
-        "test_cases", "test_case_versions", "test_steps",
-        "executions", "execution_steps",
-        "users", "roles", "assignments",
-        "test_plans", "builds",
-        "execution_claims", "claim_verifications",
-        "req_specs", "requirements",
+        "projects",
+        "test_suites",
+        "keywords",
+        "platforms",
+        "test_cases",
+        "test_case_versions",
+        "test_steps",
+        "executions",
+        "execution_steps",
+        "users",
+        "roles",
+        "assignments",
+        "test_plans",
+        "builds",
+        "execution_claims",
+        "claim_verifications",
+        "req_specs",
+        "requirements",
     }
     missing = expected - names
     assert not missing, f"missing tables: {missing}"

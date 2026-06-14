@@ -11,7 +11,8 @@ class ExecutionArtifact(Base):
     __tablename__ = "execution_artifacts"
     id: Mapped[int] = mapped_column(primary_key=True)
     execution_id: Mapped[int] = mapped_column(ForeignKey("executions.id"), index=True)
-    artifact_type: Mapped[str] = mapped_column(String(32))  # trace|log|screenshot|dump|network|tool_calls
+    # one of: trace|log|screenshot|dump|network|tool_calls
+    artifact_type: Mapped[str] = mapped_column(String(32))
     title: Mapped[str | None] = mapped_column(String(256))
     blob_key: Mapped[str] = mapped_column(String(512))
     size: Mapped[int | None] = mapped_column(Integer)

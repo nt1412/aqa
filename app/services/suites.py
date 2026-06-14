@@ -34,9 +34,7 @@ async def list_suites(session: AsyncSession, project_id: int) -> list[TestSuite]
     return list((await session.execute(stmt)).scalars().all())
 
 
-async def find_or_create_path(
-    session: AsyncSession, project_id: int, path: str
-) -> TestSuite:
+async def find_or_create_path(session: AsyncSession, project_id: int, path: str) -> TestSuite:
     """Resolve a slash-delimited path, creating any missing suites. Returns the leaf."""
     await get_project(session, project_id)
     parts = [p.strip() for p in path.split("/") if p.strip()]
@@ -47,7 +45,8 @@ async def find_or_create_path(
     for name in parts:
         stmt = select(TestSuite).where(
             TestSuite.project_id == project_id,
-            TestSuite.parent_id.is_(parent_id) if parent_id is None
+            TestSuite.parent_id.is_(parent_id)
+            if parent_id is None
             else TestSuite.parent_id == parent_id,
             TestSuite.name == name,
         )
@@ -64,9 +63,7 @@ async def find_or_create_path(
 
 async def get_tree(session: AsyncSession, project_id: int) -> list[SuiteNode]:
     suites = await list_suites(session, project_id)
-    nodes: dict[int, SuiteNode] = {
-        s.id: SuiteNode.model_validate(s) for s in suites
-    }
+    nodes: dict[int, SuiteNode] = {s.id: SuiteNode.model_validate(s) for s in suites}
     roots: list[SuiteNode] = []
     for s in suites:
         node = nodes[s.id]

@@ -4,7 +4,6 @@ from app.schemas.project import ProjectCreate
 from app.schemas.suite import SuiteCreate
 from app.schemas.testcase import StepIn, TestCaseCreate, VersionCreate
 from app.services import projects, suites, testcases
-from app.services.errors import NotFound
 
 
 async def _project_and_suite(session, prefix):
@@ -17,7 +16,8 @@ async def _project_and_suite(session, prefix):
 async def test_create_test_case_makes_version_and_steps(session):
     p, s = await _project_and_suite(session, "TC1")
     tc = await testcases.create_test_case(
-        session, s.id,
+        session,
+        s.id,
         TestCaseCreate(
             name="Login works",
             summary="user can log in",
@@ -44,7 +44,8 @@ async def test_external_id_increments(session):
 async def test_create_version_clones_and_increments(session):
     p, s = await _project_and_suite(session, "TC3")
     tc = await testcases.create_test_case(
-        session, s.id,
+        session,
+        s.id,
         TestCaseCreate(name="v", steps=[StepIn(action="a1")]),
     )
     v2 = await testcases.create_version(
