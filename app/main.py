@@ -30,9 +30,10 @@ def create_app() -> FastAPI:
         status = _ERROR_STATUS.get(type(exc), 400)
         return JSONResponse(status_code=status, content={"detail": str(exc)})
 
-    from app.api import auth
+    from app.api import auth, projects
 
     app.include_router(auth.router)
+    app.include_router(projects.router)
 
     @app.get("/health")
     async def health():
