@@ -428,7 +428,22 @@ for _name in _DEFERRED:
 
 
 def main():
-    mcp.run()
+    """Launch the MCP server.
+
+    Transport is chosen via AGENTQA_MCP_TRANSPORT (default 'stdio' — the client
+    spawns this process). Set it to 'streamable-http' (or 'sse') to run a
+    long-lived networked server other agents connect to over a URL; host/port
+    come from AGENTQA_MCP_HOST / AGENTQA_MCP_PORT (default 127.0.0.1:8001).
+    """
+    import os
+
+    transport = os.environ.get("AGENTQA_MCP_TRANSPORT", "stdio")
+    if transport != "stdio":
+        mcp.settings.host = os.environ.get("AGENTQA_MCP_HOST", "127.0.0.1")
+        mcp.settings.port = int(os.environ.get("AGENTQA_MCP_PORT", "8001"))
+        mcp.run(transport=transport)
+    else:
+        mcp.run()
 
 
 if __name__ == "__main__":
