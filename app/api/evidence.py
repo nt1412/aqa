@@ -4,7 +4,15 @@ from fastapi import APIRouter, status
 from pydantic import BaseModel
 
 from app.api.deps import CurrentUser, SessionDep
-from app.schemas.evidence import ArtifactOut, ClaimOut, VerificationCreate, VerificationOut
+from app.schemas.evidence import (
+    ArtifactOut,
+    AuditReportCreate,
+    AuditReportOut,
+    CaseEvaluation,
+    ClaimOut,
+    VerificationCreate,
+    VerificationOut,
+)
 from app.services import evidence
 
 router = APIRouter(prefix="/api/v1", tags=["evidence"])
@@ -53,3 +61,13 @@ async def unverified_claims(
 )
 async def verify(claim_id: int, body: VerificationCreate, session: SessionDep, user: CurrentUser):
     return await evidence.verify_claim(session, claim_id, body, auditor_id=user.id)
+
+
+@router.post("/audit-reports", response_model=AuditReportOut, status_code=status.HTTP_201_CREATED)
+async def create_audit_report(body: AuditReportCreate, session: SessionDep, user: CurrentUser):
+    return await evidence.create_audit_report(session, body, auditor_id=user.id)
+
+
+@router.get("/case-versions/{case_version_id}/evaluation", response_model=CaseEvaluation)
+async def evaluate(case_version_id: int, session: SessionDep, user: CurrentUser):
+    return await evidence.evaluate_test_case(session, case_version_id)

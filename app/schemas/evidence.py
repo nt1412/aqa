@@ -39,3 +39,31 @@ class VerificationOut(BaseModel):
     created_at: dt.datetime
 
     model_config = {"from_attributes": True}
+
+
+class AuditReportCreate(BaseModel):
+    entity_type: str  # case_version|suite|plan
+    entity_id: int
+    findings: dict | None = None
+    quality_score: int | None = None
+
+
+class AuditReportOut(BaseModel):
+    id: int
+    entity_type: str
+    entity_id: int
+    auditor_id: int
+    findings: dict | None = None
+    quality_score: int | None = None
+    created_at: dt.datetime
+
+    model_config = {"from_attributes": True}
+
+
+class CaseEvaluation(BaseModel):
+    case_version_id: int
+    version: int
+    summary: str | None = None
+    step_count: int
+    execution_count: int
+    last_status: str | None = None

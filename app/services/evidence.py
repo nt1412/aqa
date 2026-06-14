@@ -1,14 +1,17 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import storage
 from app.models.evidence import (
+    AuditReport,
     ClaimVerification,
     ExecutionArtifact,
     ExecutionClaim,
     ExecutionReasoning,
 )
 from app.models.execution import Execution
+from app.models.testcase import TestCaseVersion, TestStep
+from app.schemas.evidence import CaseEvaluation
 from app.services.errors import NotFound
 
 
@@ -115,3 +118,42 @@ async def list_verifications(session: AsyncSession, claim_id: int) -> list[Claim
         .order_by(ClaimVerification.id)
     )
     return list((await session.execute(stmt)).scalars().all())
+
+
+async def create_audit_report(session: AsyncSession, data, auditor_id: int) -> AuditReport:
+    report = AuditReport(
+        entity_type=data.entity_type,
+        entity_id=data.entity_id,
+        auditor_id=auditor_id,
+        findings=data.findings,
+        quality_score=data.quality_score,
+    )
+    session.add(report)
+    await session.commit()
+    await session.refresh(report)
+    return report
+
+
+async def evaluate_test_case(session: AsyncSession, case_version_id: int) -> CaseEvaluation:
+    version = await session.get(TestCaseVersion, case_version_id)
+    if version is None:
+        raise NotFound(f"test case version {case_version_id} not found")
+    step_count = (
+        await session.execute(
+            select(func.count()).select_from(TestStep).where(TestStep.version_id == case_version_id)
+        )
+    ).scalar_one()
+    exec_stmt = (
+        select(Execution)
+        .where(Execution.version_id == case_version_id)
+        .order_by(Execution.created_at.desc())
+    )
+    executions_for_version = list((await session.execute(exec_stmt)).scalars().all())
+    return CaseEvaluation(
+        case_version_id=case_version_id,
+        version=version.version,
+        summary=version.summary,
+        step_count=step_count,
+        execution_count=len(executions_for_version),
+        last_status=executions_for_version[0].status if executions_for_version else None,
+    )
