@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+/* ============================================================
+   AgentQA — "Mission Control" design system
+   phosphor-terminal industrial dark UI
+   ============================================================ */
+
+@theme {
+  --color-bg: #0a0d12;
+  --color-bg-elev: #11151c;
+  --color-bg-elev-2: #161b24;
+  --color-border: #222a36;
+  --color-border-bright: #2e3947;
+  --color-text: #e6edf3;
+  --color-text-dim: #8b98a9;
+  --color-text-faint: #5a6675;
+
+  --color-accent: #b8f135;
+  --color-accent-dim: #7f9e2a;
+
+  --color-pass: #34d399;
+  --color-fail: #fb7185;
+  --color-blocked: #fbbf24;
+  --color-notrun: #64748b;
+  --color-progress: #38bdf8;
+
+  --color-confirmed: #34d399;
+  --color-refuted: #fb7185;
+  --color-inconclusive: #fbbf24;
+
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Texture overlay: faint grid + fractal-noise grain, fixed behind content. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--color-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
+  background-size: 44px 44px;
+  opacity: 0.12;
+  mask-image: radial-gradient(ellipse 120% 90% at 50% 0%, #000 30%, transparent 80%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+#__next,
+main {
+  position: relative;
+  z-index: 1;
+}
+
+/* Mono label convention: uppercase, tracked. */
+.label {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 0.6875rem;
+  color: var(--color-text-dim);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Phosphor glow used sparingly on active/critical accents. */
+.glow-accent {
+  box-shadow: 0 0 0 1px var(--color-accent-dim), 0 0 18px -6px var(--color-accent);
+}
+
+/* Scrollbars in keeping with the control-room feel. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-bright);
+  border-radius: 0;
+  border: 2px solid var(--color-bg);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-faint);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.pulse {
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
