@@ -1,8 +1,16 @@
 from fastapi import APIRouter, status
 
 from app.api.deps import CurrentUser, SessionDep
-from app.schemas.plan import PlanCaseAdd, PlanCaseOut, PlanCreate, PlanOut, PlanUpdate
-from app.services import plans
+from app.schemas.plan import (
+    BuildCreate,
+    BuildOut,
+    PlanCaseAdd,
+    PlanCaseOut,
+    PlanCreate,
+    PlanOut,
+    PlanUpdate,
+)
+from app.services import builds, plans
 
 router = APIRouter(prefix="/api/v1", tags=["plans"])
 
@@ -41,3 +49,15 @@ async def add_cases(plan_id: int, body: PlanCaseAdd, session: SessionDep, user: 
 @router.get("/plans/{plan_id}/cases", response_model=list[PlanCaseOut])
 async def list_cases(plan_id: int, session: SessionDep, user: CurrentUser):
     return await plans.list_plan_cases(session, plan_id)
+
+
+@router.post(
+    "/plans/{plan_id}/builds", response_model=BuildOut, status_code=status.HTTP_201_CREATED
+)
+async def create_build(plan_id: int, body: BuildCreate, session: SessionDep, user: CurrentUser):
+    return await builds.create_build(session, plan_id, body)
+
+
+@router.get("/plans/{plan_id}/builds", response_model=list[BuildOut])
+async def list_builds(plan_id: int, session: SessionDep, user: CurrentUser):
+    return await builds.list_builds(session, plan_id)

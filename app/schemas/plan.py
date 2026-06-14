@@ -38,3 +38,24 @@ class PlanCaseOut(BaseModel):
     urgency: int
 
     model_config = {"from_attributes": True}
+
+
+class BuildCreate(BaseModel):
+    name: str
+    notes: str | None = None
+    tag: str | None = None
+    branch: str | None = None
+    commit_id: str | None = None
+
+
+class BuildOut(BaseModel):
+    id: int
+    plan_id: int
+    name: str
+    notes: str | None = None
+    tag: str | None = None
+    branch: str | None = None
+    commit_id: str | None = None
+    active: bool
+
+    model_config = {"from_attributes": True}
