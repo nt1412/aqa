@@ -272,3 +272,25 @@ async def test_cascade_never_overrides_a_recorded_result(session):
     )
     statuses = [r.status for r in await executions.list_for_case(session, b.id)]
     assert statuses == ["pass"]
+
+
+@pytest.mark.asyncio
+async def test_cascade_failure_does_not_fail_primary(session, monkeypatch):
+    _, _, cases, plan = await _project_with_cases(session, "CASCFAIL")
+    a, b, _ = cases
+    await plans.add_cases(session, plan.id, [a.id, b.id])
+    await testcases.add_dependency(session, b.id, a.id)
+
+    async def _boom(*args, **kwargs):
+        raise RuntimeError("cascade exploded")
+
+    monkeypatch.setattr(executions, "_cascade_block", _boom)
+    # primary must still succeed even though the cascade raises
+    ex = await executions.record_execution(
+        session,
+        ExecutionCreate(case_id=a.id, plan_id=plan.id, build_name="b1", status="fail"),
+        tester_id=None,
+        cascade=True,
+    )
+    assert ex.id is not None
+    assert ex.status == "fail"

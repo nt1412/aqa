@@ -1,3 +1,5 @@
+import logging
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -9,6 +11,8 @@ from app.schemas.execution import ExecutionCreate
 from app.services.errors import NotFound, ValidationFailed
 from app.services.evidence import record_claims_and_reasoning
 from app.services.testcases import get_dependents
+
+logger = logging.getLogger(__name__)
 
 
 async def _resolve_case(session: AsyncSession, data: ExecutionCreate) -> TestCase:
@@ -181,11 +185,18 @@ async def record_execution(
         notes=data.notes,
     )
     execution_id = execution.id
-    await session.commit()
+    await session.commit()  # primary result is now durable
     if cascade and data.status in ("fail", "blocked") and data.plan_id is not None:
-        await _cascade_block(
-            session, case_id, case_external_id, data.plan_id, build_id, tester_id
-        )
+        # Best-effort bookkeeping: the primary execution is already committed, so a
+        # cascade failure must NOT propagate (it would make the caller think the
+        # record failed and retry, duplicating the primary). Degrade gracefully.
+        try:
+            await _cascade_block(
+                session, case_id, case_external_id, data.plan_id, build_id, tester_id
+            )
+        except Exception:
+            await session.rollback()  # discard any partial cascade writes
+            logger.warning("cascade-block failed for execution %s", execution_id, exc_info=True)
     return await _load(session, execution_id)
 
 
