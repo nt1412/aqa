@@ -42,3 +42,21 @@ class RequirementOut(BaseModel):
     current_version: ReqVersionOut | None = None
 
     model_config = {"from_attributes": True}
+
+
+class CoverageLink(BaseModel):
+    case_ids: list[int]
+
+
+class CoverageGap(BaseModel):
+    requirement_id: int
+    req_version_id: int
+    req_doc_id: str
+    name: str
+
+
+class TraceabilityRow(BaseModel):
+    requirement_id: int
+    req_doc_id: str
+    name: str
+    covered_case_ids: list[int] = []
