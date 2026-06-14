@@ -14,6 +14,7 @@ dependencies = [
     "passlib[bcrypt]>=1.7",
     "bcrypt>=4.0,<5",  # passlib 1.7.4 is incompatible with bcrypt 5.x (72-byte self-test)
     "pgvector>=0.3.6",
+    "minio>=7.2",
     "mcp>=1.1",
     "typer>=0.13",
     "httpx>=0.28",
