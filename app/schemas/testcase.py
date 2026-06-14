@@ -55,3 +55,12 @@ class VersionCreate(BaseModel):
     importance: int | None = None
     execution_type: str | None = None
     steps: list[StepIn] | None = None
+
+
+class DependencyCreate(BaseModel):
+    depends_on_case_id: int
+
+
+class DependencyOut(BaseModel):
+    case_id: int
+    depends_on_case_id: int

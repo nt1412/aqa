@@ -11,6 +11,7 @@ from app.schemas.plan import (
     PlanCreate,
     PlanOut,
     PlanUpdate,
+    RunManifestEntry,
 )
 from app.services import builds, milestones, plans
 
@@ -51,6 +52,12 @@ async def add_cases(plan_id: int, body: PlanCaseAdd, session: SessionDep, user: 
 @router.get("/plans/{plan_id}/cases", response_model=list[PlanCaseOut])
 async def list_cases(plan_id: int, session: SessionDep, user: CurrentUser):
     return await plans.list_plan_cases(session, plan_id)
+
+
+@router.get("/plans/{plan_id}/manifest", response_model=list[RunManifestEntry])
+async def run_manifest(plan_id: int, session: SessionDep, user: CurrentUser):
+    """Ordered, priority- and dependency-aware run list (same as the MCP tool)."""
+    return await plans.get_run_manifest(session, plan_id)
 
 
 @router.post(

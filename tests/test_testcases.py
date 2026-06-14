@@ -161,3 +161,50 @@ async def test_list_cases_in_suite_endpoint(client, auth_headers):
     resp = await client.get(f"/api/v1/suites/{sid}/cases", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()[0]["name"] == "c"
+
+
+@pytest.mark.asyncio
+async def test_manifest_and_dependency_endpoints(client, auth_headers):
+    pc = await client.post(
+        "/api/v1/projects", json={"name": "P", "prefix": "MANAPI"}, headers=auth_headers
+    )
+    pid = pc.json()["id"]
+    sid = (
+        await client.post(
+            f"/api/v1/projects/{pid}/suites", json={"name": "S"}, headers=auth_headers
+        )
+    ).json()["id"]
+    a = (
+        await client.post(f"/api/v1/suites/{sid}/cases", json={"name": "a"}, headers=auth_headers)
+    ).json()
+    b = (
+        await client.post(f"/api/v1/suites/{sid}/cases", json={"name": "b"}, headers=auth_headers)
+    ).json()
+    plan = (
+        await client.post(
+            f"/api/v1/projects/{pid}/plans", json={"name": "P1"}, headers=auth_headers
+        )
+    ).json()
+
+    # add both cases to the plan
+    await client.post(
+        f"/api/v1/plans/{plan['id']}/cases",
+        json={"case_ids": [a["id"], b["id"]], "urgency": 3},
+        headers=auth_headers,
+    )
+    # b depends on a
+    dep = await client.post(
+        f"/api/v1/cases/{b['id']}/dependencies",
+        json={"depends_on_case_id": a["id"]},
+        headers=auth_headers,
+    )
+    assert dep.status_code == 201
+    assert dep.json() == {"case_id": b["id"], "depends_on_case_id": a["id"]}
+
+    # manifest reflects ordering + gating
+    resp = await client.get(f"/api/v1/plans/{plan['id']}/manifest", headers=auth_headers)
+    assert resp.status_code == 200
+    manifest = {m["case_id"]: m for m in resp.json()}
+    assert manifest[a["id"]]["order"] == 1 and manifest[a["id"]]["urgency"] == 3
+    assert manifest[b["id"]]["blocked_by"] == [a["id"]]
+    assert manifest[b["id"]]["runnable"] is False

@@ -59,6 +59,19 @@ export interface Plan {
   is_open: boolean;
 }
 
+export interface RunManifestEntry {
+  order: number;
+  urgency: number;
+  case_id: number;
+  external_id?: string | null;
+  name?: string | null;
+  importance?: number | null;
+  latest_status: string;
+  depends_on: number[];
+  blocked_by: number[];
+  runnable: boolean;
+}
+
 export interface Build {
   id: number;
   plan_id: number;

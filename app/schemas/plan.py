@@ -42,6 +42,19 @@ class PlanCaseOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class RunManifestEntry(BaseModel):
+    order: int
+    urgency: int
+    case_id: int
+    external_id: str | None = None
+    name: str | None = None
+    importance: int | None = None
+    latest_status: str
+    depends_on: list[int] = []
+    blocked_by: list[int] = []
+    runnable: bool
+
+
 class BuildCreate(BaseModel):
     name: str
     notes: str | None = None

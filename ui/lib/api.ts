@@ -17,6 +17,7 @@ import type {
   Project,
   Requirement,
   ReqSpec,
+  RunManifestEntry,
   SimilarFailure,
   Suite,
   SuiteNode,
@@ -110,8 +111,16 @@ export const api = {
   builds: (planId: number) => request<Build[]>("GET", `/plans/${planId}/builds`),
   milestones: (planId: number) => request<Milestone[]>("GET", `/plans/${planId}/milestones`),
   planExecutions: (planId: number) => request<Execution[]>("GET", `/plans/${planId}/executions`),
-  addCases: (planId: number, caseIds: number[]) =>
-    request<unknown[]>("POST", `/plans/${planId}/cases`, { case_ids: caseIds }),
+  addCases: (planId: number, caseIds: number[], urgency = 2) =>
+    request<unknown[]>("POST", `/plans/${planId}/cases`, { case_ids: caseIds, urgency }),
+  runManifest: (planId: number) =>
+    request<RunManifestEntry[]>("GET", `/plans/${planId}/manifest`),
+  addDependency: (caseId: number, dependsOnCaseId: number) =>
+    request<{ case_id: number; depends_on_case_id: number }>(
+      "POST",
+      `/cases/${caseId}/dependencies`,
+      { depends_on_case_id: dependsOnCaseId },
+    ),
 
   // executions
   execution: (id: number) => request<Execution>("GET", `/executions/${id}`),
