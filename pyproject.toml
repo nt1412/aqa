@@ -1,5 +1,5 @@
 [project]
-name = "agentqa"
+name = "aqa"
 version = "0.1.0"
 description = "Test management for agentic coding — a TestLink-equivalent evidence and context store for AI QA teams, with a REST API, MCP server, and CLI."
 readme = "README.md"
@@ -45,12 +45,12 @@ embeddings = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/nt1412/agentqa"
-Repository = "https://github.com/nt1412/agentqa"
-Issues = "https://github.com/nt1412/agentqa/issues"
+Homepage = "https://github.com/nt1412/aqa"
+Repository = "https://github.com/nt1412/aqa"
+Issues = "https://github.com/nt1412/aqa/issues"
 
 [project.scripts]
-agentqa = "cli.main:app"
+aqa = "cli.main:app"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

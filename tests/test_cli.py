@@ -24,8 +24,8 @@ def test_request_builds_url_and_headers(monkeypatch):
         return FakeResp()
 
     monkeypatch.setattr(cli.httpx, "request", fake_request)
-    monkeypatch.setenv("AGENTQA_API_URL", "http://x:8000")
-    monkeypatch.setenv("AGENTQA_API_KEY", "aqa_test")
+    monkeypatch.setenv("AQA_API_URL", "http://x:8000")
+    monkeypatch.setenv("AQA_API_KEY", "aqa_test")
     out = cli._request("GET", "/api/v1/projects")
     assert out == {"ok": True}
     assert captured["url"] == "http://x:8000/api/v1/projects"

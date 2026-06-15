@@ -10,21 +10,21 @@ from app.models.base import Base
 from app.models.user import User
 from app.services import auth as auth_service
 
-TEST_DB_URL = "postgresql+asyncpg://agentqa:agentqa@localhost:5432/agentqa_test"
-ADMIN_URL = "postgresql+asyncpg://agentqa:agentqa@localhost:5432/agentqa"
+TEST_DB_URL = "postgresql+asyncpg://aqa:aqa@localhost:5432/aqa_test"
+ADMIN_URL = "postgresql+asyncpg://aqa:aqa@localhost:5432/aqa"
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def _create_test_db():
     admin = create_async_engine(ADMIN_URL, isolation_level="AUTOCOMMIT")
     async with admin.connect() as conn:
-        await conn.execute(text("DROP DATABASE IF EXISTS agentqa_test"))
-        await conn.execute(text("CREATE DATABASE agentqa_test"))
+        await conn.execute(text("DROP DATABASE IF EXISTS aqa_test"))
+        await conn.execute(text("CREATE DATABASE aqa_test"))
     await admin.dispose()
     yield
     admin = create_async_engine(ADMIN_URL, isolation_level="AUTOCOMMIT")
     async with admin.connect() as conn:
-        await conn.execute(text("DROP DATABASE IF EXISTS agentqa_test"))
+        await conn.execute(text("DROP DATABASE IF EXISTS aqa_test"))
     await admin.dispose()
 
 

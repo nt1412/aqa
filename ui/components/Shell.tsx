@@ -47,7 +47,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           >
             ▰
           </span>
-          <span className="mono text-sm font-bold tracking-widest">AGENTQA</span>
+          <span className="mono text-sm font-bold tracking-widest">AQA</span>
         </div>
         <nav className="flex-1 overflow-y-auto py-3">
           {NAV.map((g) => (

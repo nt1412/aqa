@@ -1,4 +1,4 @@
-// Typed fetch client for the AgentQA backend. All calls go to same-origin /api
+// Typed fetch client for the AQA backend. All calls go to same-origin /api
 // (proxied to FastAPI by next.config.mjs). The bearer token is read from
 // localStorage on each call so it survives reloads.
 
@@ -26,7 +26,7 @@ import type {
   User,
 } from "./types";
 
-const TOKEN_KEY = "agentqa_token";
+const TOKEN_KEY = "aqa_token";
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;

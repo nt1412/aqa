@@ -1,6 +1,6 @@
-# AgentQA UI — "Mission Control"
+# AQA UI — "Mission Control"
 
-A Next.js supervision console for the AgentQA backend. Phosphor-terminal dark
+A Next.js supervision console for the AQA backend. Phosphor-terminal dark
 aesthetic (IBM Plex Mono/Sans, lime accent, status-as-color, grain+grid texture).
 
 ## Run
@@ -14,7 +14,7 @@ docker compose up -d postgres minio
 
 # 2. UI (from ui/)
 npm install
-AGENTQA_API_URL=http://localhost:8000 npm run dev   # http://localhost:3000
+AQA_API_URL=http://localhost:8000 npm run dev   # http://localhost:3000
 ```
 
 Log in with `admin` / `admin`. `next.config.mjs` proxies `/api/*` → the backend.

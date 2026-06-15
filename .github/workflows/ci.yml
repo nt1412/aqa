@@ -14,13 +14,13 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg16   # NOT postgres:16 — the suite needs the vector extension
         env:
-          POSTGRES_USER: agentqa
-          POSTGRES_PASSWORD: agentqa
-          POSTGRES_DB: agentqa
+          POSTGRES_USER: aqa
+          POSTGRES_PASSWORD: aqa
+          POSTGRES_DB: aqa
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U agentqa"
+          --health-cmd "pg_isready -U aqa"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -41,7 +41,7 @@ jobs:
         run: ruff check .
 
       - name: Test
-        # conftest creates/drops its own agentqa_test DB against the service;
+        # conftest creates/drops its own aqa_test DB against the service;
         # 2 tests skip without MinIO/embeddings. Config defaults match the service.
         run: pytest -q
 
@@ -53,13 +53,13 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg16
         env:
-          POSTGRES_USER: agentqa
-          POSTGRES_PASSWORD: agentqa
-          POSTGRES_DB: agentqa
+          POSTGRES_USER: aqa
+          POSTGRES_PASSWORD: aqa
+          POSTGRES_DB: aqa
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U agentqa"
+          --health-cmd "pg_isready -U aqa"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5

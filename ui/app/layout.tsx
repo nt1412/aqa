@@ -16,7 +16,7 @@ const plexSans = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "AgentQA — Mission Control",
+  title: "AQA — Mission Control",
   description: "Supervision console for an AI QA team",
 };
 

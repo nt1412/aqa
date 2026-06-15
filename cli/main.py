@@ -5,7 +5,16 @@ from pathlib import Path
 import httpx
 import typer
 
-app = typer.Typer(help="AgentQA CLI")
+
+def _env(key: str, default=None):
+    """Read AQA_* env, falling back to the legacy AGENTQA_* name (rename compat)."""
+    v = os.environ.get(key)
+    if v is None:
+        v = os.environ.get(key.replace("AQA_", "AGENTQA_", 1))
+    return v if v is not None else default
+
+
+app = typer.Typer(help="AQA CLI")
 project_app = typer.Typer(help="Manage projects")
 suite_app = typer.Typer(help="Manage suites")
 case_app = typer.Typer(help="Manage test cases")
@@ -35,9 +44,9 @@ app.add_typer(agent_app, name="agent")
 
 
 def _request(method: str, path: str, *, json_body=None, params=None) -> dict:
-    base = os.environ.get("AGENTQA_API_URL", "http://localhost:8000")
+    base = _env("AQA_API_URL", "http://localhost:8000")
     headers = {}
-    api_key = os.environ.get("AGENTQA_API_KEY")
+    api_key = _env("AQA_API_KEY")
     if api_key:
         headers["X-API-Key"] = api_key
     resp = httpx.request(method, base + path, headers=headers, json=json_body, params=params)

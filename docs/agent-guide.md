@@ -1,8 +1,8 @@
-# AgentQA — Guide for QA Agents
+# AQA — Guide for QA Agents
 
-How an autonomous QA agent uses AgentQA to author tests, run regressions, and
+How an autonomous QA agent uses AQA to author tests, run regressions, and
 keep its work attributable and self-correcting. Read the **What's new** section
-if you've used AgentQA before; then follow **Recommended workflow**.
+if you've used AQA before; then follow **Recommended workflow**.
 
 ---
 
@@ -42,11 +42,11 @@ streamable-http: http://localhost:8001/mcp
 Tools are self-describing — list them on connect. The DB (Postgres) must be up.
 
 **Auth (opt-in).** By default the MCP layer is open. If the operator sets
-`AGENTQA_MCP_REQUIRE_AUTH=true`:
+`AQA_MCP_REQUIRE_AUTH=true`:
 - every tool except `register_agent` requires a valid **`X-API-Key`** header
   (your own key from `register_agent`) — send it on every call;
 - `register_agent` itself requires the operator's **enrollment secret** as an
-  **`X-Enroll-Key`** header (`AGENTQA_MCP_ENROLL_KEY`) — otherwise open
+  **`X-Enroll-Key`** header (`AQA_MCP_ENROLL_KEY`) — otherwise open
   registration would mint a key to anyone and defeat auth. It fails closed (no
   secret configured ⇒ no registration);
 - your authenticated identity drives attribution — a passed `agent_id`/
@@ -59,9 +59,9 @@ with your returned key as `X-API-Key` → work.
 ## Connect (REST/CLI)
 
 ```bash
-export AGENTQA_API_URL=http://localhost:8000
-export AGENTQA_API_KEY=<your agent key>     # from `agent register`, below
-agentqa --help
+export AQA_API_URL=http://localhost:8000
+export AQA_API_KEY=<your agent key>     # from `agent register`, below
+aqa --help
 ```
 
 ---
@@ -71,11 +71,11 @@ agentqa --help
 1. **Register once** → get your `agent_id`, a one-time API key, and an
    **`orientation`** payload (this workflow, returned in-band — read it).
    - MCP: `register_agent(login, agent_model)` → `{id, api_key, orientation, ...}`
-   - CLI: `agentqa agent register --login l33tpwn-regression --model claude-opus-4-8`
+   - CLI: `aqa agent register --login l33tpwn-regression --model claude-opus-4-8`
    - Self-onboarding: a project's coding agent registers itself this way.
 
 1b. **Create your project if it's new** → `create_project(name, prefix)` (MCP)
-   or `agentqa project create <name> --prefix <PREFIX>`. The prefix is permanent
+   or `aqa project create <name> --prefix <PREFIX>`. The prefix is permanent
    and unique. Reuse the returned `project_id` everywhere below. (Skip if the
    project already exists — just use its id.)
    - Cache the **id**; the MCP hot path only needs the integer id. The api_key
@@ -135,19 +135,19 @@ agentqa --help
 ## CLI (mirrors the above)
 
 ```bash
-agentqa agent register --login <handle> --model <model>
-agentqa agent list
-agentqa agent deactivate <user_id>
-agentqa project create <name> --prefix <PREFIX>
-agentqa suite tree <project_id>
-agentqa plan create <project_id> --name <name>
-agentqa plan add-case <plan_id> --case <case_id> --urgency 3
-agentqa case depends <case_id> --on <prereq_case_id>
-agentqa plan manifest <plan_id> [--build <build_id>]
-agentqa run record <case_id> --plan <plan_id> --build <name> --status <s> \
+aqa agent register --login <handle> --model <model>
+aqa agent list
+aqa agent deactivate <user_id>
+aqa project create <name> --prefix <PREFIX>
+aqa suite tree <project_id>
+aqa plan create <project_id> --name <name>
+aqa plan add-case <plan_id> --case <case_id> --urgency 3
+aqa case depends <case_id> --on <prereq_case_id>
+aqa plan manifest <plan_id> [--build <build_id>]
+aqa run record <case_id> --plan <plan_id> --build <name> --status <s> \
     --commit <sha> --cascade
-agentqa req gaps <project_id>
-agentqa req traceability <project_id>
+aqa req gaps <project_id>
+aqa req traceability <project_id>
 ```
 
 ---

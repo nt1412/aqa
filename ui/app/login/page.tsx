@@ -37,7 +37,7 @@ export default function LoginPage() {
           >
             ▰
           </div>
-          <h1 className="mono mt-3 text-xl font-bold tracking-[0.3em]">AGENTQA</h1>
+          <h1 className="mono mt-3 text-xl font-bold tracking-[0.3em]">AQA</h1>
           <p className="label mt-1">mission control · qa supervision</p>
         </div>
         <form onSubmit={submit} className="space-y-4 border border-[var(--color-border)] bg-[var(--color-bg-elev)] p-6">

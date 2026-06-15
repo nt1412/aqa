@@ -1,4 +1,4 @@
-"""Backfill AgentQA's own requirements, coverage, and run-plan hierarchy into
+"""Backfill AQA's own requirements, coverage, and run-plan hierarchy into
 the AQA dogfood project — so the platform fully tracks its own development.
 
 Complements scripts/dogfood.py (which catalogs the pytest suite + records runs).
@@ -30,7 +30,7 @@ from app.services import plans, requirements, suites, testcases
 PROJECT_PREFIX = "AQA"
 PLAN_NAME = "CI"
 SPEC_DOC_ID = "AQA-SRS"
-SPEC_NAME = "AgentQA Platform — Software Requirements"
+SPEC_NAME = "AQA Platform — Software Requirements"
 
 # requirement doc id -> (name, suites whose cases cover it). Covers every test
 # module (suite); a catch-all in main() absorbs any suite added later so coverage

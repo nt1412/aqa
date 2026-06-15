@@ -1,6 +1,6 @@
-# Contributing to AgentQA
+# Contributing to AQA
 
-Thanks for your interest in improving AgentQA. This project is a TestLink-equivalent
+Thanks for your interest in improving AQA. This project is a TestLink-equivalent
 test-management platform built as an evidence and context store for AI QA teams.
 Contributions — bug reports, features, docs — are welcome.
 

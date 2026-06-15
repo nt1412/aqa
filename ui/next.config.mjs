@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-const BACKEND = process.env.AGENTQA_API_URL || "http://localhost:8000";
+const BACKEND = process.env.AQA_API_URL || "http://localhost:8000";
 
 const nextConfig = {
   async rewrites() {

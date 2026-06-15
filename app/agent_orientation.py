@@ -6,7 +6,7 @@ in docs/agent-guide.md.
 """
 
 AGENT_ORIENTATION = """\
-AgentQA is the test-management + evidence store for AI QA teams. You connect over
+AQA is the test-management + evidence store for AI QA teams. You connect over
 MCP, register to get an identity + key, then author / run / verify tests. If
 you've just registered, pass your id as `agent_id` on every record_test_run so
 your work is attributable.

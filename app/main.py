@@ -25,7 +25,7 @@ def create_app() -> FastAPI:
     if settings.environment == "prod" and settings.jwt_secret == "change-me-in-production":
         raise RuntimeError("JWT_SECRET must be set when ENVIRONMENT=prod")
 
-    app = FastAPI(title="AgentQA", version="0.1.0")
+    app = FastAPI(title="AQA", version="0.1.0")
 
     @app.exception_handler(NotFound)
     @app.exception_handler(Conflict)

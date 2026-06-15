@@ -1,6 +1,6 @@
-# AgentQA
+# AQA
 
-[![CI](https://github.com/nt1412/agentqa/actions/workflows/ci.yml/badge.svg)](https://github.com/nt1412/agentqa/actions/workflows/ci.yml)
+[![CI](https://github.com/nt1412/aqa/actions/workflows/ci.yml/badge.svg)](https://github.com/nt1412/aqa/actions/workflows/ci.yml)
 
 Test management for agentic coding — TestLink-equivalent, with a REST API, an MCP server, and a CLI over one shared service layer.
 
@@ -25,16 +25,16 @@ TOKEN=$(curl -s -X POST localhost:8000/api/v1/auth/login \
   -d '{"login":"admin","password":"admin"}' | jq -r .access_token)
 KEY=$(curl -s -X POST localhost:8000/api/v1/auth/token \
   -H "authorization: Bearer $TOKEN" | jq -r .api_key)
-export AGENTQA_API_KEY=$KEY AGENTQA_API_URL=http://localhost:8000
+export AQA_API_KEY=$KEY AQA_API_URL=http://localhost:8000
 ```
 
 ## CLI
 
 ```bash
-agentqa project create "Demo" --prefix DEMO
-agentqa suite create 1 --name "Auth"
-agentqa case create 1 --from-file case.json
-agentqa run record 1 --plan 1 --build b1 --status pass
+aqa project create "Demo" --prefix DEMO
+aqa suite create 1 --name "Auth"
+aqa case create 1 --from-file case.json
+aqa run record 1 --plan 1 --build b1 --status pass
 ```
 
 ## MCP server
@@ -48,9 +48,9 @@ the recommended workflow (register → discover → plan → run → self-correc
 audit) across the 28 MCP tools and the matching CLI.
 
 **Per-agent MCP auth (opt-in).** The MCP layer is open by default. Set
-`AGENTQA_MCP_REQUIRE_AUTH=true` to require a valid `X-API-Key` (an agent key from
+`AQA_MCP_REQUIRE_AUTH=true` to require a valid `X-API-Key` (an agent key from
 `register_agent`) on every tool except `register_agent`, which then requires the
-operator's enrollment secret `AGENTQA_MCP_ENROLL_KEY` as an `X-Enroll-Key` header
+operator's enrollment secret `AQA_MCP_ENROLL_KEY` as an `X-Enroll-Key` header
 (open registration would otherwise mint keys to anyone; it fails closed). The
 authenticated identity drives attribution (a passed `agent_id` can't override
 it), and deactivating an identity revokes its access.

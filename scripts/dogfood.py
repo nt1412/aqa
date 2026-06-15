@@ -1,8 +1,8 @@
-"""Dogfood: catalog AgentQA's own pytest suite inside AgentQA, and record a run.
+"""Dogfood: catalog AQA's own pytest suite inside AQA, and record a run.
 
 This closes the loop project -> suites -> versioned cases -> execution against a
 plan+build, using the real service layer. It is idempotent: re-running reuses the
-AgentQA project, suites, and cases (so it survives the unique constraints on
+AQA project, suites, and cases (so it survives the unique constraints on
 project prefix and (project_id, external_id)), and appends one fresh execution
 per case for the current git build.
 
@@ -13,7 +13,7 @@ Executions are recorded through `executions.record_execution` (which upserts the
 build by name).
 
 Data is written to the dev database (app.db.SessionLocal), in a self-contained
-`AgentQA` project (prefix AQA), independent of scripts/seed.py defaults.
+`AQA` project (prefix AQA), independent of scripts/seed.py defaults.
 
 Usage:
     python -m pytest --junitxml=dogfood-results.xml   # produce real results
@@ -36,10 +36,10 @@ from app.schemas.project import ProjectCreate
 from app.schemas.testcase import TestCaseCreate
 from app.services import executions, projects, suites, testcases
 
-PROJECT_NAME = "AgentQA"
+PROJECT_NAME = "AQA"
 PROJECT_PREFIX = "AQA"
 PLAN_NAME = "CI"
-REPO = "agentqa"
+REPO = "aqa"
 JUNIT_PATH = Path("dogfood-results.xml")
 
 

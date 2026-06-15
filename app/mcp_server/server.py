@@ -1,7 +1,7 @@
-"""AgentQA MCP server — 28 workflow tools wrapping the shared service layer.
+"""AQA MCP server — 28 workflow tools wrapping the shared service layer.
 
 Each tool opens its own DB session via _session(). Per-agent auth is opt-in
-(AGENTQA_MCP_REQUIRE_AUTH): when on, every tool except register_agent requires a
+(AQA_MCP_REQUIRE_AUTH): when on, every tool except register_agent requires a
 valid X-API-Key and the authenticated identity drives attribution. See
 docs/agent-guide.md for the agent workflow.
 """
@@ -33,23 +33,31 @@ from app.services import (
 )
 from app.services.errors import Unauthorized
 
-mcp = FastMCP("agentqa")
+mcp = FastMCP("aqa")
 
-# ---------- lightweight per-agent auth (opt-in via AGENTQA_MCP_REQUIRE_AUTH) ----------
+# ---------- lightweight per-agent auth (opt-in via AQA_MCP_REQUIRE_AUTH) ----------
 # When enabled, every tool except register_agent requires a valid X-API-Key header
 # (an agent's own key, from register_agent). The authenticated identity also
 # overrides any caller-supplied agent_id/auditor_id, so attribution can't be spoofed.
 
 # the authenticated agent for the current request (set by _session)
-_auth_agent: ContextVar = ContextVar("agentqa_mcp_agent", default=None)
+_auth_agent: ContextVar = ContextVar("aqa_mcp_agent", default=None)
 
 
 class AuthRequired(Exception):
     """MCP auth is enabled but the request carried no valid API key."""
 
 
+def _env(key: str, default=None):
+    """Read AQA_* env, falling back to the legacy AGENTQA_* name (rename compat)."""
+    v = os.environ.get(key)
+    if v is None:
+        v = os.environ.get(key.replace("AQA_", "AGENTQA_", 1))
+    return v if v is not None else default
+
+
 def _auth_enabled() -> bool:
-    return os.environ.get("AGENTQA_MCP_REQUIRE_AUTH", "").strip().lower() in (
+    return _env("AQA_MCP_REQUIRE_AUTH", "").strip().lower() in (
         "1", "true", "yes", "on",
     )
 
@@ -101,7 +109,7 @@ async def _require_agent(session):
     if agent is None:
         raise AuthRequired(
             "MCP auth is enabled — pass a valid X-API-Key header "
-            "(an agent key from register_agent / `agentqa agent register`)."
+            "(an agent key from register_agent / `aqa agent register`)."
         )
     return agent
 
@@ -117,11 +125,11 @@ def _check_enrollment() -> None:
     """Gate registration when auth is enabled. register_agent must stay reachable
     without a per-agent key (it mints one), but open registration would defeat
     auth — anyone could mint a key and authenticate. So require a shared
-    enrollment secret (X-Enroll-Key == AGENTQA_MCP_ENROLL_KEY). Fails closed:
+    enrollment secret (X-Enroll-Key == AQA_MCP_ENROLL_KEY). Fails closed:
     if auth is on and no enroll key is configured, registration is refused."""
     if not _auth_enabled():
         return
-    expected = os.environ.get("AGENTQA_MCP_ENROLL_KEY")
+    expected = _env("AQA_MCP_ENROLL_KEY")
     if not expected or _request_enroll_key() != expected:
         raise AuthRequired(
             "MCP auth is enabled — registration requires a valid X-Enroll-Key "
@@ -178,7 +186,7 @@ def _case_dump(out) -> dict:
 
 @mcp.tool()
 async def get_orientation() -> dict:
-    """Public landing page (no auth, no enrollment): what AgentQA is and how an
+    """Public landing page (no auth, no enrollment): what AQA is and how an
     agent uses it. Read this to decide whether to join; register_agent then mints
     your identity + key. Returns no secrets — just workflow docs."""
     from app.agent_orientation import AGENT_ORIENTATION
@@ -732,17 +740,16 @@ for _name in _DEFERRED:
 def main():
     """Launch the MCP server.
 
-    Transport is chosen via AGENTQA_MCP_TRANSPORT (default 'stdio' — the client
+    Transport is chosen via AQA_MCP_TRANSPORT (default 'stdio' — the client
     spawns this process). Set it to 'streamable-http' (or 'sse') to run a
     long-lived networked server other agents connect to over a URL; host/port
-    come from AGENTQA_MCP_HOST / AGENTQA_MCP_PORT (default 127.0.0.1:8001).
+    come from AQA_MCP_HOST / AQA_MCP_PORT (default 127.0.0.1:8001).
     """
-    import os
 
-    transport = os.environ.get("AGENTQA_MCP_TRANSPORT", "stdio")
+    transport = _env("AQA_MCP_TRANSPORT", "stdio")
     if transport != "stdio":
-        mcp.settings.host = os.environ.get("AGENTQA_MCP_HOST", "127.0.0.1")
-        mcp.settings.port = int(os.environ.get("AGENTQA_MCP_PORT", "8001"))
+        mcp.settings.host = _env("AQA_MCP_HOST", "127.0.0.1")
+        mcp.settings.port = int(_env("AQA_MCP_PORT", "8001"))
         mcp.run(transport=transport)
     else:
         mcp.run()

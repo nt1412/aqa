@@ -1,4 +1,4 @@
-// TypeScript mirrors of the AgentQA backend schemas (the fields the UI reads).
+// TypeScript mirrors of the AQA backend schemas (the fields the UI reads).
 
 export interface Project {
   id: number;
