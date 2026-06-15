@@ -28,9 +28,9 @@ what changed — all additive, nothing you did breaks:
   prerequisite fails — so the run reflects what can't be trusted. Never
   overrides a result already recorded for that build.
 
-MCP surface is **28 tools** (incl. `create_project`, `list_agents`,
-`deactivate_agent`). The CLI mirrors all of this, and per-agent MCP auth is
-available opt-in (see below).
+MCP surface is **29 tools** (incl. `get_orientation`, `create_project`,
+`list_agents`, `deactivate_agent`). The CLI mirrors all of this, and per-agent
+MCP auth is available opt-in (see below).
 
 ---
 
@@ -117,8 +117,9 @@ aqa --help
 
 ---
 
-## MCP tools (28)
+## MCP tools (29)
 
+**Discovery (open, no auth)** — `get_orientation`
 **Identity** — `register_agent`, `list_agents`, `deactivate_agent`
 **Onboarding & authoring** — `create_project`, `create_test_suite`,
 `create_test_case`, `bulk_create_test_cases`, `get_test_case`, `search_test_cases`
