@@ -104,6 +104,24 @@ All of B1–B5 are **resolved**, plus **B6** (added during the work):
 - **B6 ✓** `guard_hits` table → health reports `reinvestigations_avoided` (actual) beside
   `reinvestigations_avoidable` (point-in-time).
 
+## Live validation findings (the thesis, finally exercised on real branch data)
+
+The branch-aware centerpiece had only ever been proven by unit tests — every live
+check showed `/branches` empty because all of AQA's own builds were on `main`.
+Running a real regression on a real branch proved the loop (BLOCKED → quarantine →
+READY) **and** surfaced two things unit tests can't:
+
+- **A baseline must be a *representative full* build.** The latest default-branch
+  build is the baseline, and a partial one (e.g. a smoke run that catalogued only
+  one module) makes almost every case read as `new_test` → false **READY**. Lay a
+  full main build before judging branches. *(Possible hardening: prefer the latest
+  full build, or mark builds partial/complete.)*
+- **Build identity is `(plan, build_name)`, and dogfood names builds by short SHA.**
+  Two builds at the same SHA collide into one row — so a branch needs its **own
+  commit** (distinct SHA) or its build merges into main's. Real branches have
+  distinct commits, so this is fine in practice, but recorders must keep build
+  names commit-unique and baselines must not share a name across branches.
+
 ## Changelog
 
 - **2026-06-15** — Initial capture during the Operator Console lineage work (T0
