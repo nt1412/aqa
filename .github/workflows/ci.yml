@@ -83,3 +83,75 @@ jobs:
       - name: Check models match migrations
         # fails if a model change has no corresponding migration (autogenerate drift)
         run: alembic check
+
+  ui-e2e:
+    name: UI smoke (Playwright)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: aqa
+          POSTGRES_PASSWORD: aqa
+          POSTGRES_DB: aqa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aqa"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install backend (editable + dev extras)
+        run: pip install -e ".[dev]"
+
+      - name: Migrate + seed admin
+        run: |
+          alembic upgrade head
+          python -m scripts.seed
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install UI deps
+        working-directory: ui
+        run: npm ci
+
+      - name: Install Playwright browser
+        working-directory: ui
+        run: npx playwright install --with-deps chromium
+
+      - name: Build UI
+        working-directory: ui
+        run: npm run build
+
+      - name: Smoke test (start backend + a project, run Playwright)
+        # backend + UI must both be live for the e2e run; start the API here so it
+        # stays up for the whole step, seed one project so the views have a current
+        # project, then Playwright's webServer starts the built UI on :3007.
+        env:
+          AQA_API_URL: http://localhost:8000
+        run: |
+          nohup python -m uvicorn app.main:app --port 8000 > /tmp/rest.log 2>&1 &
+          for i in $(seq 1 40); do curl -sf http://localhost:8000/docs >/dev/null && break; sleep 1; done
+          TOK=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
+            -H 'content-type: application/json' \
+            -d '{"login":"admin","password":"admin"}' \
+            | python -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
+          curl -s -X POST http://localhost:8000/api/v1/projects \
+            -H "authorization: Bearer $TOK" -H 'content-type: application/json' \
+            -d '{"name":"Smoke","prefix":"SMOKE"}' >/dev/null
+          cd ui && npx playwright test

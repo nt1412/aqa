@@ -4,3 +4,8 @@ out/
 .env.local
 next-env.d.ts
 *.tsbuildinfo
+
+# playwright
+/test-results/
+/playwright-report/
+/.playwright-mcp/
