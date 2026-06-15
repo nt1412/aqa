@@ -175,6 +175,12 @@ def case_history(case_id: int):
     _print(_request("GET", f"/api/v1/cases/{case_id}/history"))
 
 
+@build_app.command("compare")
+def build_compare(build_id: int, to: str = typer.Option("baseline", "--to")):
+    """Diff a build vs another build (--to <id>) or its baseline (--to baseline)."""
+    _print(_request("GET", f"/api/v1/builds/{build_id}/compare", params={"to": to}))
+
+
 @plan_app.command("create")
 def plan_create(project_id: int, name: str = typer.Option(..., "--name")):
     _print(_request("POST", f"/api/v1/projects/{project_id}/plans", json_body={"name": name}))

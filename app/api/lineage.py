@@ -22,3 +22,11 @@ async def build_detail(build_id: int, session: SessionDep, user: CurrentUser):
 async def case_history(case_id: int, session: SessionDep, user: CurrentUser):
     """A case's latest result per build, chronological, with broke/fixed transitions."""
     return await lineage.case_history(session, case_id)
+
+
+@router.get("/builds/{build_id}/compare")
+async def compare(build_id: int, session: SessionDep, user: CurrentUser, to: str = "baseline"):
+    """Classify each case between this build and another build (?to=<id>) or its
+    auto-resolved baseline (?to=baseline): regression / fixed / still_failing /
+    still_passing / new_test / removed."""
+    return await lineage.compare(session, build_id, to)

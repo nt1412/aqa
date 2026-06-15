@@ -197,6 +197,82 @@ async def resolve_baseline(session: AsyncSession, build: Build) -> Build | None:
     return eligible[-1]
 
 
+async def _case_meta(session: AsyncSession, case_ids: set[int]) -> dict[int, tuple]:
+    if not case_ids:
+        return {}
+    rows = (
+        await session.execute(
+            text(
+                "SELECT id, external_id, name FROM test_cases WHERE id = ANY(:ids)"
+            ),
+            {"ids": list(case_ids)},
+        )
+    ).all()
+    return {cid: (ext, name) for cid, ext, name in rows}
+
+
+_DIFF_CLASSES = (
+    "regression",
+    "fixed",
+    "still_failing",
+    "still_passing",
+    "new_test",
+    "removed",
+)
+
+
+def _classify(baseline_status: str | None, build_status: str | None) -> str:
+    if baseline_status is None and build_status is not None:
+        return "new_test"  # new coverage on this branch — NOT a regression
+    if build_status is None and baseline_status is not None:
+        return "removed"
+    if baseline_status == "pass" and build_status in ("fail", "blocked"):
+        return "regression"  # you broke it
+    if baseline_status in ("fail", "blocked") and build_status == "pass":
+        return "fixed"
+    if baseline_status in ("fail", "blocked") and build_status in ("fail", "blocked"):
+        return "still_failing"
+    return "still_passing"
+
+
+async def compare(session: AsyncSession, build_id: int, to: int | str = "baseline") -> dict:
+    """Classify each case between a build and another build (or its baseline).
+
+    ``to`` is a build id, or "baseline" to auto-resolve the default-branch build.
+    Each case is exactly one of: regression / fixed / still_failing /
+    still_passing / new_test / removed. A regression (baseline pass → fail) is
+    never conflated with a new_test (no baseline result).
+    """
+    build = await get_build(session, build_id)
+    if to == "baseline":
+        baseline = await resolve_baseline(session, build)
+    else:
+        baseline = await get_build(session, int(to))
+    cur = await _latest_results(session, build_id)
+    base = await _latest_results(session, baseline.id) if baseline else {}
+
+    classes: dict[str, list] = {k: [] for k in _DIFF_CLASSES}
+    meta = await _case_meta(session, set(cur) | set(base))
+    for cid in sorted(set(cur) | set(base), key=lambda x: meta.get(x, ("", ""))[0]):
+        b_status = cur.get(cid)
+        a_status = base.get(cid)
+        ext, name = meta.get(cid, (None, None))
+        classes[_classify(a_status, b_status)].append(
+            {
+                "case_id": cid,
+                "external_id": ext,
+                "name": name,
+                "baseline_status": a_status,
+                "build_status": b_status,
+            }
+        )
+    return {
+        "build_id": build_id,
+        "baseline_build_id": baseline.id if baseline else None,
+        "classes": classes,
+    }
+
+
 async def list_builds_enriched(session: AsyncSession, plan_id: int) -> list[dict]:
     """Builds for a plan, newest first, each with its rollup — the build timeline."""
     builds = await list_builds(session, plan_id)

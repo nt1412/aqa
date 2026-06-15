@@ -620,6 +620,16 @@ async def get_case_history(case_id: int) -> dict:
 
 
 @mcp.tool()
+async def compare_builds(build_id: int, to: str = "baseline") -> dict:
+    """Classify each case between a build and another build (to=<id>) or its
+    auto-resolved default-branch baseline (to='baseline'): regression / fixed /
+    still_failing / still_passing / new_test / removed. A regression (was green
+    on baseline, now red) is never conflated with a new_test (no baseline)."""
+    async with _session() as s:
+        return await lineage.compare(s, build_id, to)
+
+
+@mcp.tool()
 async def register_agent(
     login: str,
     agent_model: str | None = None,

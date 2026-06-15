@@ -193,3 +193,46 @@ async def test_resolve_baseline_none_when_no_default_branch_builds(session):
     br = await _record(session, c.id, plan.id, "feat-1", "fail", commit_id="f1", branch="feature/x")
     base = await lineage.resolve_baseline(session, await session.get(Build, br.build_id))
     assert base is None
+
+
+# ---------- compare / diff classification ----------
+
+
+@pytest.mark.asyncio
+async def test_compare_classifies_each_case(session):
+    _, _, cases, plan = await _project_with_cases(session, "CMP", n=5)
+    a, b, c, d, e = cases
+    await plans.add_cases(session, plan.id, [x.id for x in cases])
+    # baseline (main): a pass, b fail, c pass, e pass  (d never run)
+    for cid, st in [(a.id, "pass"), (b.id, "fail"), (c.id, "pass"), (e.id, "pass")]:
+        await _record(session, cid, plan.id, "main-1", st, commit_id="m1", branch="main")
+    # branch build (base_commit pins baseline to main-1):
+    #   a pass→fail = regression ; b fail→pass = fixed ; c pass→pass = still_passing
+    #   d no baseline result = new_test ; e in baseline but not run here = removed
+    br = await _record(
+        session, a.id, plan.id, "feat-1", "fail",
+        commit_id="f1", branch="feature/x", base_commit="m1",
+    )
+    await _record(session, b.id, plan.id, "feat-1", "pass", commit_id="f1", branch="feature/x")
+    await _record(session, c.id, plan.id, "feat-1", "pass", commit_id="f1", branch="feature/x")
+    await _record(session, d.id, plan.id, "feat-1", "pass", commit_id="f1", branch="feature/x")
+
+    diff = await lineage.compare(session, br.build_id, "baseline")
+    assert diff["baseline_build_id"] is not None
+    cls = {k: {x["case_id"] for x in v} for k, v in diff["classes"].items()}
+    assert a.id in cls["regression"]
+    assert b.id in cls["fixed"]
+    assert c.id in cls["still_passing"]
+    assert d.id in cls["new_test"]  # NOT a regression — no baseline result
+    assert e.id in cls["removed"]
+
+
+@pytest.mark.asyncio
+async def test_compare_no_baseline_all_new(session):
+    _, _, cases, plan = await _project_with_cases(session, "CMP0", n=2)
+    await plans.add_cases(session, plan.id, [c.id for c in cases])
+    br = await _record(session, cases[0].id, plan.id, "feat-1", "fail", branch="feature/x")
+    diff = await lineage.compare(session, br.build_id, "baseline")
+    assert diff["baseline_build_id"] is None
+    assert {x["case_id"] for x in diff["classes"]["new_test"]} == {cases[0].id}
+    assert diff["classes"]["regression"] == []  # no baseline → never a regression

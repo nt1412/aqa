@@ -141,6 +141,15 @@ def test_case_history_invokes_get(monkeypatch):
     assert calls[0][1] == "/api/v1/cases/5/history"
 
 
+def test_build_compare_invokes_get(monkeypatch):
+    calls = []
+    monkeypatch.setattr(cli, "_request", lambda m, p, **k: calls.append((m, p, k)) or {})
+    result = runner.invoke(cli.app, ["build", "compare", "12", "--to", "baseline"])
+    assert result.exit_code == 0
+    assert calls[0][1] == "/api/v1/builds/12/compare"
+    assert calls[0][2]["params"]["to"] == "baseline"
+
+
 def test_run_record_passes_branch_and_base_commit(monkeypatch):
     calls = []
     monkeypatch.setattr(cli, "_request", lambda m, p, **k: calls.append((m, p, k)) or {"id": 1})
