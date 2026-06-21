@@ -1,0 +1,82 @@
+[
+  {
+    "id": "O1",
+    "text": "assertEqual(order.total, expected) -> 49.97 != 50.00, off by 0.03. Line totals computed as float prices * qty and summed; binary float can't represent cent values exactly so rounding drifts. Money math needs Decimal or integer cents, not float."
+  },
+  {
+    "id": "O2",
+    "text": "Expected 20.00 but got 19.999999999998 — classic float accumulation. Per-line tax (e.g. 0.1*price) summed in a loop, each term carrying IEEE-754 error that compounds across lines. No rounding to 2dp before the equality check."
+  },
+  {
+    "id": "O3",
+    "text": "Sequence emitted -2147483648 after wrapping; uniqueness/format test fails on the negative value. The counter column/variable is a signed 32-bit int and silently overflowed past INT_MAX under sustained volume. Widen to BIGINT or use a proper sequence type."
+  },
+  {
+    "id": "O4",
+    "text": "GET /profile returns old display_name after PUT updates it; integration test reads stale value. Write hits the DB but the read is served from a cache that wasn't invalidated on update, so the entry lives until TTL. Need cache eviction in the update path."
+  },
+  {
+    "id": "O5",
+    "text": "Write-through update lost under load: final cached value != last write. Two concurrent misses both recompute from the DB and race to set(); the slower set overwrites the newer value (read-modify-write with no locking or CAS). Lost-update on the cache, not the store."
+  },
+  {
+    "id": "O6",
+    "text": "Tenant A request occasionally renders tenant B dashboard JSON. Cache key is built from the dashboard/view name only and omits tenant_id, so entries collide across tenants. Cross-tenant data leak — key must be namespaced per tenant."
+  },
+  {
+    "id": "O7",
+    "text": "POST /login with username `admin' OR '1'='1' --` returns 200 + valid session; auth bypass test trips. Credentials are concatenated into the SQL string, so the injected predicate makes the WHERE always-true and matches a row. Parameterize the query."
+  },
+  {
+    "id": "O8",
+    "text": "Login with empty password succeeds against an account that has no password hash set; test expected 401. The comparison treats empty-vs-NULL stored hash as a match (both falsy) instead of rejecting. Accounts without a usable credential must be denied outright."
+  },
+  {
+    "id": "O9",
+    "text": "Session id pre-login == session id post-login; rotation assertion fails. The handler authenticates but never regenerates the session identifier, leaving the pre-auth id valid — textbook session fixation. Must issue a fresh session and drop the old one on successful login."
+  },
+  {
+    "id": "O10",
+    "text": "Concurrency test times out; order tx holds order row then waits on payment row, payment tx holds payment then waits on order. Deadlock from inconsistent lock acquisition order across the two services. DB eventually kills one as victim but the test exceeds its wait budget first. Enforce a global lock ordering."
+  },
+  {
+    "id": "O11",
+    "text": "Load test ran 10000 increments, final count 9663. count = count + 1 is a non-atomic read-modify-write; interleaved threads read the same value and clobber each other's increment. Needs an atomic op / row-level lock, not app-side ++."
+  },
+  {
+    "id": "O12",
+    "text": "TimeoutError acquiring connection from pool (size=20, active=20) under load. The error path returns without releasing the connection — no try/finally or context manager — so a failing query leaks one each time until the pool is drained. Connections never returned on exception."
+  },
+  {
+    "id": "O13",
+    "text": "Perf test asserts <=5 queries, captured 213. Serializing the orders list lazily loads order.customer per row -> N+1. Each order triggers its own SELECT for the customer instead of a single join/eager load. Add select_related / prefetch."
+  },
+  {
+    "id": "O14",
+    "text": "Query latency blew past the 1s threshold once the table crossed a few million rows. EXPLAIN shows Seq Scan / type=ALL on the filtered column — there's no index, so cost grows linearly with row count. Add an index on the predicate column."
+  },
+  {
+    "id": "O15",
+    "text": "Page 2+ each drop their first row; test diff shows record at the page boundary missing. Offset computed as page * pageSize instead of (page - 1) * pageSize, so every page skips one extra item past the boundary. Off-by-one in the OFFSET math."
+  },
+  {
+    "id": "O16",
+    "text": "Scheduled job fired at 08:00 instead of 09:00 the day after the DST switch. Naive datetimes compared/added without tzinfo, so the one-hour UTC-offset shift wasn't accounted for. Use timezone-aware datetimes (and a real tz database) for scheduling arithmetic."
+  },
+  {
+    "id": "O17",
+    "text": "TypeError: startswith first arg must be bytes or a tuple of bytes, not str. Payload read from the socket as bytes but compared against a str literal; the encode/decode boundary isn't normalized before the prefix check. Decode to str (or compare bytes to bytes) at the edge."
+  },
+  {
+    "id": "O18",
+    "text": "Flag stays enabled even with FEATURE_X=false. Code does `if os.environ.get('FEATURE_X'):` — the env value is the non-empty string \"false\", which is truthy, so the guard always passes. Must parse the string explicitly (== 'true' / strtobool), not rely on truthiness."
+  },
+  {
+    "id": "O19",
+    "text": "Fixed-width parse returns 'ABC12' for a 6-char field, last char dropped. Slice written as line[start:start+width-1]; the stop index is exclusive so it already excludes start+width — subtracting one trims a real character. Off-by-one on the slice end."
+  },
+  {
+    "id": "O20",
+    "text": "AttributeError: 'NoneType' object has no attribute 'lower' in the webhook handler. Optional field absent from the payload -> dict.get returns None, and the code calls a method on it without a None guard. Default the value or branch on None before use."
+  }
+]

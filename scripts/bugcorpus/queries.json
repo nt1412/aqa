@@ -1,0 +1,62 @@
+[
+  {
+    "id": "RS1",
+    "text": "Payroll test failed: assertEqual on gross pay mismatched, expected 1281.25 but got 1281.22, off by a few cents."
+  },
+  {
+    "id": "RS2",
+    "text": "Integration test failed: after an admin updated a product's price, checkout still displayed the old value, read 19.99 where 24.99 was expected."
+  },
+  {
+    "id": "RS3",
+    "text": "Security test on the product search endpoint failed: a crafted query string returned every row in the table instead of a filtered subset."
+  },
+  {
+    "id": "RS4",
+    "text": "Concurrency test for stock-reserve plus shipment-create timed out after 30s under load; worker threads appear stuck."
+  },
+  {
+    "id": "RS5",
+    "text": "Load test failed: configured limit is 100, but 137 requests were admitted during a burst."
+  },
+  {
+    "id": "RS6",
+    "text": "Perf test on the monthly-statement generator exceeded budget: 413 queries observed for 412 invoices."
+  },
+  {
+    "id": "RS7",
+    "text": "Audit-log search by actor hit the 5s statement timeout once the table grew large."
+  },
+  {
+    "id": "RS8",
+    "text": "Correlation test failed across the November DST change: events around 01:00-02:00 came out sorted in the wrong order."
+  },
+  {
+    "id": "RS9",
+    "text": "Debug instrumentation observed active in production even though the DEBUG setting reads \"0\"."
+  },
+  {
+    "id": "RS10",
+    "text": "Export job crashed for some users: AttributeError: 'NoneType' object has no attribute 'zip' at exporter.py:74."
+  },
+  {
+    "id": "N1",
+    "text": "Request handler intermittently times out (>30s) on certain user-supplied search strings, with one CPU core pinned at 100% throughout the hang."
+  },
+  {
+    "id": "N2",
+    "text": "Endpoint returned a coroutine object instead of the value; the test saw \"<coroutine object ...>\" where it expected a dict."
+  },
+  {
+    "id": "N3",
+    "text": "Security test failed: a state-changing POST sent from a forged cross-site origin was accepted; expected a 403."
+  },
+  {
+    "id": "N4",
+    "text": "Service memory grew unbounded under sustained traffic and the process was OOM-killed after a few hours."
+  },
+  {
+    "id": "N5",
+    "text": "Contract test failed: deleting a non-existent resource returned 200 instead of the expected 404."
+  }
+]

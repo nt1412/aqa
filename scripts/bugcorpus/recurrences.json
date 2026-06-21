@@ -1,0 +1,42 @@
+[
+  {
+    "id": "R1",
+    "text": "AssertionError: expected gross 1281.25 but got 1281.22 (delta -0.03). Gross computed with binary float multiplication (hours * rate) then summed, so rounding error accumulates across line items before the final round. Switch to Decimal for monetary math and round once at the paystub total, not per-component."
+  },
+  {
+    "id": "R2",
+    "text": "Integration test read price=19.99 after admin PUT set it to 24.99. The product cache isn't invalidated on price update, so checkout serves the stale entry until the TTL expires. Add a cache evict/bust on the product-write path keyed by product id."
+  },
+  {
+    "id": "R3",
+    "text": "Security test injected `' OR '1'='1' -- ` into the q param and got back the full table instead of the filtered match. The search filter is built via string concatenation into the WHERE clause with no parameterization. Bind the user input as a query parameter (prepared statement) instead of interpolating it."
+  },
+  {
+    "id": "R4",
+    "text": "Concurrency test timed out after 30s; thread dump shows two threads blocked — inventory holds the stock-row lock waiting on the shipment lock while shipping holds shipment waiting on stock. Classic lock-ordering deadlock between the reserve-stock and create-shipment paths. Acquire locks in a consistent global order, or use a single transaction with a deterministic acquisition sequence."
+  },
+  {
+    "id": "R5",
+    "text": "Load test sent 200 concurrent reqs against a limit of 100 and 137 were admitted. The limiter does a read-count-then-increment as separate steps, so concurrent bursts all read a sub-limit count before any increments land — non-atomic check-and-increment race. Make the counter increment atomic (e.g. Redis INCR with expiry, or a Lua/CAS path)."
+  },
+  {
+    "id": "R6",
+    "text": "Perf test flagged 1+N queries: 1 SELECT for invoices, then a separate `SELECT * FROM line_items WHERE invoice_id = ?` per invoice (412 invoices -> 413 queries). Classic N+1 in the statement generator. Batch the line-item fetch with a single WHERE invoice_id IN (...) or a join, and group in memory."
+  },
+  {
+    "id": "R7",
+    "text": "Audit search by actor exceeded the 5s statement timeout once the table passed ~8M rows. EXPLAIN shows `Seq Scan on audit_log (cost=0.00..210334.50)` filtering on actor_id — no index, so it scans the whole table. Add an index on actor_id (likely composite with created_at for the time-range filter)."
+  },
+  {
+    "id": "R8",
+    "text": "Correlation test failed across the Nov DST fall-back: events from service B sorted before earlier service-A events. Timestamps are compared as naive local-time strings, so the repeated 01:00–02:00 hour reorders incorrectly. Store and compare in UTC (or tz-aware instants) and only convert to local for display."
+  },
+  {
+    "id": "R9",
+    "text": "Debug instrumentation active in prod despite DEBUG=\"0\". The flag comes in as a string and is checked with a plain truthiness test, and non-empty \"0\" is truthy, so it always enables. Parse the env value explicitly (e.g. value in {\"1\",\"true\",\"yes\"}) rather than relying on truthiness of the raw string."
+  },
+  {
+    "id": "R10",
+    "text": "Export job crashed: `AttributeError: 'NoneType' object has no attribute 'zip'` at exporter.py:74 in build_row -> `address.zip`. Users who never set a mailing address have address=None, and the code dereferences it unconditionally. Guard with a None check / optional chaining and emit empty fields for missing addresses."
+  }
+]
