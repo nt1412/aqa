@@ -60,9 +60,8 @@ def main() -> None:
     sha = _git("rev-parse", "--short", "HEAD") or "local"
     full_sha = _git("rev-parse", "HEAD")
     branch = _git("rev-parse", "--abbrev-ref", "HEAD") or DEFAULT_BRANCH
-    base_commit = None
-    if branch != DEFAULT_BRANCH:
-        base_commit = _git("merge-base", "HEAD", DEFAULT_BRANCH)
+    # always compute + send the merge-base (on main this == HEAD, i.e. degenerate)
+    base_commit = _git("merge-base", "HEAD", DEFAULT_BRANCH)
     tests = _parse_junit(JUNIT_PATH)
 
     # project (find-or-create by prefix, client-side)
