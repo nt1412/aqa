@@ -1,14 +1,16 @@
 import pytest
 from sqlalchemy import select
 
+from app.models.user import User
 from app.schemas.evidence import VerificationCreate
 from app.schemas.execution import ExecutionCreate
 from app.schemas.plan import PlanCreate
 from app.schemas.project import ProjectCreate
 from app.schemas.suite import SuiteCreate
 from app.schemas.testcase import TestCaseCreate
+from app.services import auth as auth_service
 from app.services import evidence, executions, plans, projects, suites, testcases
-from app.services.errors import NotFound
+from app.services.errors import Forbidden, NotFound
 
 
 async def _execution_with_claim(session, prefix):
@@ -60,6 +62,44 @@ async def test_multiple_auditors_per_claim(session, user):
     )
     verifications = await evidence.list_verifications(session, claim_id)
     assert {v.verdict for v in verifications} == {"confirmed", "refuted"}
+
+
+@pytest.mark.asyncio
+async def test_self_verification_rejected(session, user):
+    # Doer != checker: the agent that filed a claim cannot verify it; a different
+    # agent can. (user/'alice' is the auditor; 'bob' is the claimant.)
+    claimant = User(
+        login="bob",
+        password_hash=auth_service.hash_password("pw"),
+        email="bob@example.com",
+        auth_method="agent",
+        active=True,
+    )
+    session.add(claimant)
+    await session.commit()
+    await session.refresh(claimant)
+    p = await projects.create_project(session, ProjectCreate(name="P", prefix="VF3"))
+    s = await suites.create_suite(session, p.id, SuiteCreate(name="S"))
+    tc = await testcases.create_test_case(session, s.id, TestCaseCreate(name="c"))
+    plan = await plans.create_plan(session, p.id, PlanCreate(name="Plan"))
+    await executions.record_execution(
+        session,
+        ExecutionCreate(
+            case_id=tc.id, plan_id=plan.id, build_name="b", status="pass", claims=["it works"]
+        ),
+        tester_id=claimant.id,
+    )
+    claim_id = (await evidence.list_unverified_claims(session))[0].id
+
+    with pytest.raises(Forbidden):
+        await evidence.verify_claim(
+            session, claim_id, VerificationCreate(verdict="confirmed"), auditor_id=claimant.id
+        )
+    # a different agent may verify
+    v = await evidence.verify_claim(
+        session, claim_id, VerificationCreate(verdict="confirmed"), auditor_id=user.id
+    )
+    assert v.verdict == "confirmed"
 
 
 @pytest.mark.asyncio

@@ -25,6 +25,9 @@ class ExecutionClaim(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     execution_id: Mapped[int] = mapped_column(ForeignKey("executions.id"), index=True)
     claim_text: Mapped[str] = mapped_column(Text)
+    # the agent that filed the claim (the run's tester); a different agent must
+    # verify it. Null = unattributed (can't enforce doer != checker).
+    claimant_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

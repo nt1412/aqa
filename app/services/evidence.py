@@ -24,7 +24,7 @@ from app.schemas.evidence import (
     SimilarFailure,
     StepFailure,
 )
-from app.services.errors import NotFound
+from app.services.errors import Forbidden, NotFound
 
 # Statuses that count as failures for the self-correction loop (similar-failure
 # search + failure-context recent executions). Passing runs are excluded.
@@ -91,10 +91,15 @@ async def record_claims_and_reasoning(
     agent_model: str | None,
     session_id: str | None,
     notes: str | None = None,
+    claimant_id: int | None = None,
 ) -> None:
     """Persist claims + reasoning (+ best-effort embedding). Does NOT commit."""
     for claim_text in claims:
-        session.add(ExecutionClaim(execution_id=execution_id, claim_text=claim_text))
+        session.add(
+            ExecutionClaim(
+                execution_id=execution_id, claim_text=claim_text, claimant_id=claimant_id
+            )
+        )
 
     has_reasoning_row = reasoning is not None or agent_model is not None or bool(notes)
     if not has_reasoning_row:
@@ -239,6 +244,8 @@ async def verify_claim(
     claim = await session.get(ExecutionClaim, claim_id)
     if claim is None:
         raise NotFound(f"claim {claim_id} not found")
+    if claim.claimant_id is not None and claim.claimant_id == auditor_id:
+        raise Forbidden("an agent cannot verify its own claim (doer != checker)")
     verification = ClaimVerification(
         claim_id=claim_id,
         auditor_id=auditor_id,

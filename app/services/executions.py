@@ -203,6 +203,7 @@ async def record_execution(
         data.agent_model,
         data.session_id,
         notes=data.notes,
+        claimant_id=tester_id,
     )
     execution_id = execution.id
     await session.commit()  # primary result is now durable
