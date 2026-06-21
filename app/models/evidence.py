@@ -51,6 +51,9 @@ class ExecutionReasoning(Base):
     agent_session_id: Mapped[str | None] = mapped_column(String(128))
     token_count: Mapped[int | None] = mapped_column(Integer)
     embedding: Mapped[list[float] | None] = mapped_column(Vector(384), nullable=True)
+    # cleaned root-cause text (embeddings.embed_text_for) — the same text we embed,
+    # stored so keyword/full-text retrieval indexes prose, not the raw JSON dump.
+    search_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class AuditReport(Base):

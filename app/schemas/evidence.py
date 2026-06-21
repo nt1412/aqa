@@ -125,6 +125,13 @@ class FailureExecution(BaseModel):
     step_failures: list[StepFailure] = []
 
 
+class RecurrenceHit(BaseModel):
+    execution_id: int
+    case_id: int
+    status: str
+    rank: float  # ts_rank_cd; higher = stronger keyword overlap
+
+
 class FailureContext(BaseModel):
     case_id: int
     case_name: str

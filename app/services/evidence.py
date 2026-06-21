@@ -1,4 +1,6 @@
-from sqlalchemy import func, select
+import re
+
+from sqlalchemy import Integer, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import embeddings, storage
@@ -18,6 +20,7 @@ from app.schemas.evidence import (
     EvidenceExecution,
     FailureContext,
     FailureExecution,
+    RecurrenceHit,
     SimilarFailure,
     StepFailure,
 )
@@ -26,6 +29,58 @@ from app.services.errors import NotFound
 # Statuses that count as failures for the self-correction loop (similar-failure
 # search + failure-context recent executions). Passing runs are excluded.
 _FAILURE_STATUSES = ("fail", "blocked")
+
+_WORD = re.compile(r"[a-z0-9]{3,}")
+
+
+def _tsquery_terms(text: str) -> list[str]:
+    """Significant lexemes from free text, de-duped, order-preserving."""
+    return list(dict.fromkeys(_WORD.findall((text or "").lower())))
+
+
+async def search_recurrences(
+    session: AsyncSession,
+    query_text: str,
+    project_id: int | None = None,
+    n: int = 5,
+    min_terms: int = 2,
+) -> list[RecurrenceHit]:
+    """Keyword/FTS retrieval over cleaned reasoning text, with a silence gate.
+
+    A hit must share at least ``min_terms`` DISTINCT query lexemes with the prior
+    (capped at how many the query has) — so a single common word ("timeout")
+    shared with an otherwise-unrelated failure does NOT register. No qualifying
+    prior -> empty result ('no known prior', a real signal). Includes BOTH pass
+    and fail rows (a fix is often documented in a passing run)."""
+    terms = _tsquery_terms(query_text)
+    if not terms:
+        return []
+    required = min(min_terms, len(terms))
+    tsvector = func.to_tsvector("english", ExecutionReasoning.search_text)
+    rank = func.ts_rank_cd(tsvector, func.to_tsquery("english", " | ".join(terms)))
+    # count of DISTINCT query terms whose lexeme appears in this row's text
+    match_count = None
+    for term in terms:
+        hit = cast(tsvector.op("@@")(func.to_tsquery("english", term)), Integer)
+        match_count = hit if match_count is None else match_count + hit
+    stmt = (
+        select(Execution.id, TestCaseVersion.case_id, Execution.status, rank.label("rank"))
+        .select_from(ExecutionReasoning)
+        .join(Execution, Execution.id == ExecutionReasoning.execution_id)
+        .join(TestCaseVersion, TestCaseVersion.id == Execution.version_id)
+        .where(ExecutionReasoning.search_text.is_not(None), match_count >= required)
+        .order_by(match_count.desc(), rank.desc())
+        .limit(n)
+    )
+    if project_id is not None:
+        stmt = stmt.join(TestCase, TestCase.id == TestCaseVersion.case_id).where(
+            TestCase.project_id == project_id
+        )
+    rows = (await session.execute(stmt)).all()
+    return [
+        RecurrenceHit(execution_id=r.id, case_id=r.case_id, status=r.status, rank=float(r.rank))
+        for r in rows
+    ]
 
 
 async def record_claims_and_reasoning(
@@ -60,6 +115,7 @@ async def record_claims_and_reasoning(
             agent_model=agent_model,
             agent_session_id=session_id,
             embedding=embedding,
+            search_text=embed_text or None,
         )
     )
 

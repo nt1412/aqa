@@ -15,6 +15,7 @@ from app.schemas.evidence import (
     ClaimWithVerdict,
     EvidenceBundle,
     FailureContext,
+    RecurrenceHit,
     SimilarFailure,
     VerificationCreate,
     VerificationOut,
@@ -109,6 +110,17 @@ async def agent_history(
 @router.get("/cases/{case_id}/similar-failures", response_model=list[SimilarFailure])
 async def similar_failures(case_id: int, session: SessionDep, user: CurrentUser, n: int = 5):
     return await evidence.search_similar_failures(session, case_id, n)
+
+
+@router.get("/recurrences", response_model=list[RecurrenceHit])
+async def recurrences(
+    q: str,
+    session: SessionDep,
+    user: CurrentUser,
+    project_id: int | None = None,
+    n: int = 5,
+):
+    return await evidence.search_recurrences(session, q, project_id, n)
 
 
 @router.get("/cases/{case_id}/failure-context", response_model=FailureContext)

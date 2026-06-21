@@ -45,13 +45,19 @@ async def main(project_id: int) -> None:
             if embed_text:
                 vec = embeddings.embed(embed_text)
                 await s.execute(
-                    text("update execution_reasoning set embedding = :v where id = :i"),
-                    {"v": _vec_literal(vec), "i": rid},
+                    text(
+                        "update execution_reasoning set embedding = :v, search_text = :t"
+                        " where id = :i"
+                    ),
+                    {"v": _vec_literal(vec), "t": embed_text, "i": rid},
                 )
                 n_set += 1
             else:
                 await s.execute(
-                    text("update execution_reasoning set embedding = NULL where id = :i"),
+                    text(
+                        "update execution_reasoning set embedding = NULL, search_text = NULL"
+                        " where id = :i"
+                    ),
                     {"i": rid},
                 )
                 n_null += 1

@@ -560,6 +560,20 @@ async def search_similar_failures(case_id: int, n: int = 5) -> list[dict]:
         return [r.model_dump() for r in rows]
 
 
+@mcp.tool()
+async def search_recurrences(
+    query_text: str, project_id: int | None = None, n: int = 5
+) -> list[dict]:
+    """Keyword search over prior failure/fix reasoning for recurrences of a pattern.
+
+    Pass the current failure's symptom or root-cause text. Returns BOTH passing and
+    failing prior runs (a fix is often documented in a pass). Empty result means no
+    prior shares vocabulary — i.e. 'no known prior' (a real signal, not an error)."""
+    async with _session() as s:
+        hits = await evidence.search_recurrences(s, query_text, project_id, n)
+        return [h.model_dump() for h in hits]
+
+
 # ---------- Phase 2d: requirements & coverage tools ----------
 
 
